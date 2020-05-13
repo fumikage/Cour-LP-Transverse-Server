@@ -1,32 +1,102 @@
 import { ApolloServer,gql } from 'apollo-server';
 
 const typeDefs = gql`
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
-  # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
-    title: String
-    author: String
+  type Astronaut {
+    name: String
+    surname: String
+    nationality: String
+    money: Float
+    login: String
+    pass: String
+    token: String
+    rocket: Rocket
   }
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
+  type Rocket {
+    name: String
+    destination: Planet
+    resources:[Resource] 
+    modules: [Module]
+    fuel: Int
+    location: Boolean
+  }
+  type Planet {
+    name: String
+    costDestination: Int
+    resources: [Resource]
+  }
+  type Resource {
+    name: String
+    rarity: String
+    price: Float
+  }
+  type Module {
+    name: String
+  }
   type Query {
-    books: [Book]
+    astronauts: [Astronaut]
+    rockets: [Rocket]
+    planets: [Planet]
+    resources: [Resource]
+    modules: [Module]
   }
 `;
 
-
-const books = [
+  const astronauts = [
     {
-      title: 'Harry Potter and the Chamber of Secrets',
-      author: 'J.K. Rowling',
-    },
+      name: 'Luke',
+      surname: 'Skywalker',
+      nationality: 'Jedi',
+      money: 0,
+      login:  'luke0101',
+      pass: 'Ilovemyfather',
+      rocket: {
+        name: 'Faucon Millenium'
+      }
+    }
+      
+  ];
+  const rockets = [
     {
-      title: 'Jurassic Park',
-      author: 'Michael Crichton',
-    },
+      name: 'Faucon Millenium',
+      destination: {
+        name: 'Tatooine'
+      },
+      resources:[
+        {
+          name: 'Gold'
+        } 
+      ],
+      modules: [
+        {
+          name: 'Propulseur v2'
+        }
+      ],
+      fuel: 50,
+      location: true
+    }   
+  ];
+  const planets = [
+    {
+      name: 'Tatooine',
+      costDestination: 500000,
+      resources: [
+        {
+          name: 'Gold'
+        }
+      ]
+    }
+  ];
+  const resources = [
+    {
+      name: 'Gold',
+      rarity: 'Rare',
+      price: 300
+    }
+  ];
+  const modules = [
+    {
+      name: 'Propulseur v2'
+    }
   ];
 
 
@@ -34,7 +104,11 @@ const books = [
 // schema. This resolver retrieves books from the "books" array above.
 const resolvers = {
     Query: {
-      books: () => books,
+      astronauts: () => astronauts,
+      rockets: () => rockets,
+      planets: () => planets,
+      resources: ()=> resources,
+      modules: ()=> modules
     },
   };
 
