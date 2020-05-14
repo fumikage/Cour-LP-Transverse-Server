@@ -1,17 +1,27 @@
-import { merge } from 'lodash';
+import  { merge } from 'lodash';
 import { makeExecutableSchema } from 'graphql-tools';
 
-// User typedefs and resolvers
 import {
-  typeDef as User,
-  resolvers as userResolvers,
-} from './schema/user.schema';
+  typeDef as Astronaut,
+  resolvers as astronautResolvers,
+} from './schema/astronaut.schema';
+import {
+  typeDef as Module,
+  resolvers as moduleResolvers,
+} from './schema/module.schema';
+import {
+  typeDef as Planet,
+  resolvers as planetResolvers,
+} from './schema/planet.schema';
+import {
+  typeDef as Resource,
+  resolvers as resourceResolvers,
+} from './schema/resource.schema';
+import {
+  typeDef as Rocket,
+  resolvers as rocketResolvers,
+} from './schema/Rocket.schema';
 
-// Add more schema and model here
-//....
-//....
-
-// General query
 const Query = `
   type Query {
     _empty: String
@@ -28,6 +38,6 @@ const resolvers = {};
 
 // Do not forget to merge at the end of typeDefs and resolvers
 export const schema = makeExecutableSchema({
-  typeDefs: [ Query, User],
-  resolvers: merge(resolvers, userResolvers),
+  typeDefs: [ Query, Astronaut, Rocket, Resource, Planet, Module],
+  resolvers: merge(resolvers, astronautResolvers, rocketResolvers, resourceResolvers, planetResolvers, moduleResolvers),
 });
