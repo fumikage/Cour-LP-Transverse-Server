@@ -2,6 +2,8 @@ import {Astronaut} from "../models/Astronaut";
 import {Rocket} from "../models/Rocket";
 const dummy = require('mongoose-dummy');
 const ignoredFields = ['_id','created_at', '__v', /detail.*_info/];
+const jwt = require('jsonwebtoken')
+const bcrypt = require ('bcryptjs')
 
 export const typeDef = `
     type Astronaut {
@@ -12,7 +14,6 @@ export const typeDef = `
         money: Float
         login: String
         pass: String
-        token: String
         rockets: [Rocket]
   }
 
@@ -23,21 +24,29 @@ export const typeDef = `
     money: Int
     login: String
     password: String
-    token: String
   }
 
   extend type Query {
       astronautSchemaAssert: String
       astronauts: [Astronaut]
       astronaut(_id: ID!): Astronaut
+      currentUser(Astronaut: AstronautInput): Astronaut
+     
   }
 
   extend type Mutation {
-      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!, token: String!): Boolean
+      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!): Boolean
       createAstronautWithInput(input: AstronautInput!): Astronaut
       deleteAstronaut(_id: ID!): Boolean
       updateAstronaut(_id: ID!,input: AstronautInput!): Astronaut
       addRocketToAstronaut(_id: ID!, _idRocket: ID!): Boolean
+      login(login: String!, password: String!): LoginResponse!
+      
+  }
+
+  type LoginResponse {
+        token:String,
+        astronaut: Astronaut
   }
 `
 
@@ -48,6 +57,13 @@ export const resolvers = {
         astronautSchemaAssert: async () => {
             return "Hello world, from Astronaut schema"
         },
+        currentUser: (parent, args, { Astronaut }) => {
+            // this if statement is our authentication check
+            if (!Astronaut) {
+              throw new Error('Not Authenticated')
+            }
+            return Astronaut.findOne({ id: user.id })
+          },
         astronauts: async () => {
             let astronauts = [];
             for (let index = 0; index < 5; index++) {
@@ -65,12 +81,45 @@ export const resolvers = {
                 returnDate: true
             })
         },
+        
     },
     Mutation: {
-        createAstronaut: async (root, args, context, info) => {
-            await Astronaut.create(args);
-            return true;
+        
+        createAstronaut: async (parent, {name, surname, nationality, money, login, password}, ctx, info) =>{
+            const hashedPassword = await bcrypt.hash(password, 10)
+            const user = await Astronaut.create({
+                name,
+                surname,
+                nationality,
+                money,
+                login,
+                password: hashedPassword,
+            })
+            return true
           },
+          login: async(parent, {login, password}, ctx,info) => {
+            const Astronautfind = await Astronaut.findOne({login: login});
+            if(!Astronautfind){
+                throw new Error('Invalid Login')
+            }
+            const passwordMatch = await bcrypt.compare(password, Astronautfind.password)
+            if(!passwordMatch) {
+                throw new Error('Invalid Login')
+            }
+            const token = jwt.sign(
+                {
+                    id: Astronautfind._id,
+                    login: Astronautfind.login,
+                },
+                'my-secret-from-env-file-in-prod',
+                {
+                    expiresIn: '30d',
+                },
+            )
+            return {
+                token, astronaut: Astronautfind
+            }
+        },
         createAstronautWithInput: async (root, { input }, context, info) => {
             return Astronaut.create(input);
         },

@@ -20,7 +20,7 @@ import {
 import {
   typeDef as Rocket,
   resolvers as rocketResolvers,
-} from './schema/Rocket.schema';
+} from './schema/rocket.schema';
 
 const Query = `
   type Query {
