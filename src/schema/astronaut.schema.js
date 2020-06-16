@@ -1,5 +1,5 @@
 import {Astronaut} from "../models/Astronaut";
-import {Rocket} from "../models/Rocket";
+import {Rocket, createRocket} from "../models/Rocket";
 const dummy = require('mongoose-dummy');
 const ignoredFields = ['_id','created_at', '__v', /detail.*_info/];
 const jwt = require('jsonwebtoken')
@@ -35,11 +35,11 @@ export const typeDef = `
   }
 
   extend type Mutation {
-      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!): Boolean
+      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!): LoginResponse!
       createAstronautWithInput(input: AstronautInput!): Astronaut
       deleteAstronaut(_id: ID!): Boolean
       updateAstronaut(_id: ID!,input: AstronautInput!): Astronaut
-      addRocketToAstronaut(_id: ID!, _idRocket: ID!): Boolean
+      addRocketToAstronaut(_id: ID!, _idRocket: ID!): Astronaut
       login(login: String!, password: String!): LoginResponse!
       
   }
@@ -85,18 +85,42 @@ export const resolvers = {
     },
     Mutation: {
         
-        createAstronaut: async (parent, {name, surname, nationality, money, login, password}, ctx, info) =>{
+        createAstronaut: async (parent, {name, surname, nationality, money, login, password,}, ctx, info) =>{
             const hashedPassword = await bcrypt.hash(password, 10)
-            const user = await Astronaut.create({
+
+            const astronaut = await Astronaut.create({
                 name,
                 surname,
                 nationality,
                 money,
                 login,
                 password: hashedPassword,
+                rockets: []
+               
             })
-            return true
-          },
+           const rocket = await Rocket.create({name: astronaut.login, fuel: 0, location:0});
+           const rocket1 = await Rocket.findById(rocket._id)
+           console.log(rocket1._id)
+           await Astronaut.findByIdAndUpdate(astronaut._id, {
+            $push: {
+                rockets: rocket1
+            }
+        })
+            astronaut.save()
+            const token = jwt.sign(
+                {
+                    id: astronaut._id,
+                    login: astronaut.login,
+                },
+                'my-secret-from-env-file-in-prod',
+                {
+                    expiresIn: '1h',
+                },
+            )
+            return {
+                token, astronaut: astronaut
+            }
+        },  
           login: async(parent, {login, password}, ctx,info) => {
             const Astronautfind = await Astronaut.findOne({login: login});
             if(!Astronautfind){
@@ -143,7 +167,8 @@ export const resolvers = {
             return true;
         }
     }
-};
+}
+        
 /*
 
 Query & mutation for GraphQl

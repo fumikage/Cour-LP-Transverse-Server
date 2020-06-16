@@ -7,6 +7,7 @@ const ignoredFields = ['_id','created_at', '__v', /detail.*_info/];
 
 export const typeDef = `
 type Rocket {
+  _id:ID!
   name: String
   destinations: [Planet]
   resources:[Resource] 
@@ -26,7 +27,7 @@ extend type Query {
   rocket(_id: ID!): Rocket
 }
 extend type Mutation {
-  createRocket(name: String!,fuel: Int!,location: Int!): Boolean
+  createRocket(name: String!,fuel: Int!,location: Int!): Rocket
   createRocketWithInput(input: RocketInput!): Rocket
   deleteRocket(_id: ID!): Boolean
   updateRocket(_id: ID!,input: RocketInput!): Rocket
@@ -62,8 +63,8 @@ export const resolvers = {
   },
   Mutation: {
     createRocket: async (root, args, context, info) => {
-      await Rocket.create(args);
-      return true;
+      const rocket = await Rocket.create(args);
+      return rocket;
     },
     createRocketWithInput: async (root, { input }, context, info) => {
       return Rocket.create(input);
