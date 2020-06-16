@@ -31,11 +31,12 @@ export const typeDef = `
       astronauts: [Astronaut]
       astronaut(_id: ID!): Astronaut
       currentUser(Astronaut: AstronautInput): Astronaut
+      findRocketOfAstronaut(_id: ID!): Rocket
      
   }
 
   extend type Mutation {
-      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!): LoginResponse!
+      createAstronaut(name: String!,surname: String!,nationality: String!,money: Int!, login: String!,password: String!, rocketName: String!): LoginResponse!
       createAstronautWithInput(input: AstronautInput!): Astronaut
       deleteAstronaut(_id: ID!): Boolean
       updateAstronaut(_id: ID!,input: AstronautInput!): Astronaut
@@ -81,11 +82,21 @@ export const resolvers = {
                 returnDate: true
             })
         },
+        findRocketOfAstronaut: async (root, { _id}, context, info) => {
+            const astronaut = await Astronaut.findById(_id);
+            const rocket = await Rocket.findById(astronaut.rockets[0]._id)
+            console.log(rocket)
+            return rocket;
+            return dummy(Astronaut, {
+                ignore: ignoredFields,
+                returnDate: true
+            })
+        },
         
     },
     Mutation: {
         
-        createAstronaut: async (parent, {name, surname, nationality, money, login, password,}, ctx, info) =>{
+        createAstronaut: async (parent, {name, surname, nationality, money, login, password, rocketName}, ctx, info) =>{
             const hashedPassword = await bcrypt.hash(password, 10)
 
             const astronaut = await Astronaut.create({
@@ -98,7 +109,7 @@ export const resolvers = {
                 rockets: []
                
             })
-           const rocket = await Rocket.create({name: astronaut.login, fuel: 0, location:0});
+           const rocket = await Rocket.create({name: rocketName, fuel: 0, location:0});
            const rocket1 = await Rocket.findById(rocket._id)
            console.log(rocket1._id)
            await Astronaut.findByIdAndUpdate(astronaut._id, {
@@ -137,7 +148,7 @@ export const resolvers = {
                 },
                 'my-secret-from-env-file-in-prod',
                 {
-                    expiresIn: '30d',
+                    expiresIn: '1h',
                 },
             )
             return {
