@@ -9,6 +9,8 @@ const astronautSchema = new Schema({
   password: String,
   money: Number,
   rockets: [{ type: Schema.Types.ObjectId, ref: 'Rocket' }],
+  currentPlanet: Number,
+  currentProgress: Number,
 }, {collection:'Astronaut'});
 
 

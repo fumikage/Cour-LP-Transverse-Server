@@ -4,6 +4,7 @@ const dummy = require('mongoose-dummy');
 const ignoredFields = ['_id','created_at', '__v', /detail.*_info/];
 const jwt = require('jsonwebtoken')
 const bcrypt = require ('bcryptjs')
+import planetData from '../mock/planet';
 
 export const typeDef = `
     type Astronaut {
@@ -15,6 +16,8 @@ export const typeDef = `
         login: String
         pass: String
         rockets: [Rocket]
+        currentPlanet: Int
+        currentProgress: Float
   }
 
   input AstronautInput{
@@ -32,6 +35,7 @@ export const typeDef = `
       astronaut(_id: ID!): Astronaut
       currentUser(Astronaut: AstronautInput): Astronaut
       findRocketOfAstronaut(_id: ID!): Rocket
+      findPlanetSelected(_id: ID!): PlanetSelect
      
   }
 
@@ -48,6 +52,11 @@ export const typeDef = `
   type LoginResponse {
         token:String,
         astronaut: Astronaut
+  }
+  type PlanetSelect {
+    id: Int,
+    name: String,
+    costDestination: Int
   }
 `
 
@@ -85,14 +94,24 @@ export const resolvers = {
         findRocketOfAstronaut: async (root, { _id}, context, info) => {
             const astronaut = await Astronaut.findById(_id);
             const rocket = await Rocket.findById(astronaut.rockets[0]._id)
-            console.log(rocket)
             return rocket;
             return dummy(Astronaut, {
                 ignore: ignoredFields,
                 returnDate: true
             })
         },
-        
+        findPlanetSelected: async (root, {_id}, context, info) => {
+            const astronaut = await Astronaut.findById(_id);
+            const planets = planetData.planets
+            let planetSelect;
+            planets.forEach(function(planet){
+                if(planet.id === astronaut.currentPlanet){
+                   planetSelect = planet
+                }
+               
+            })   
+            return planetSelect       
+        }
     },
     Mutation: {
         
@@ -106,12 +125,12 @@ export const resolvers = {
                 money,
                 login,
                 password: hashedPassword,
-                rockets: []
+                rockets: [],
+                currentPlanet: 1
                
             })
            const rocket = await Rocket.create({name: rocketName, fuel: 0, location:0});
            const rocket1 = await Rocket.findById(rocket._id)
-           console.log(rocket1._id)
            await Astronaut.findByIdAndUpdate(astronaut._id, {
             $push: {
                 rockets: rocket1
@@ -172,8 +191,7 @@ export const resolvers = {
                     rockets: rocket
                 }
             })
-            console.log(rocket);
-            console.log(astronaut);
+           
             astronaut.save();
             return true;
         }
