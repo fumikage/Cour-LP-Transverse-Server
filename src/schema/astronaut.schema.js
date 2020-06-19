@@ -46,6 +46,7 @@ export const typeDef = `
       updateAstronaut(_id: ID!,input: AstronautInput!): Astronaut
       addRocketToAstronaut(_id: ID!, _idRocket: ID!): Astronaut
       login(login: String!, password: String!): LoginResponse!
+      changePlanet(_id: ID!): PlanetSelect
       
   }
 
@@ -114,7 +115,19 @@ export const resolvers = {
         }
     },
     Mutation: {
-        
+        changePlanet: async (root, {_id}, context, info) => {
+            const mYastronaut = await Astronaut.findById(_id);
+            const astronaut = await Astronaut.findByIdAndUpdate(_id, {currentPlanet: mYastronaut.currentPlanet + 1});
+            const planets = planetData.planets
+            let planetSelect;
+            planets.forEach(function(planet){
+                if(planet.id === astronaut.currentPlanet){
+                   planetSelect = planet
+                }
+               
+            })   
+            return planetSelect       
+        },
         createAstronaut: async (parent, {name, surname, nationality, money, login, password, rocketName}, ctx, info) =>{
             const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -184,6 +197,7 @@ export const resolvers = {
         updateAstronaut: async (root, { _id, input }) => {
             return Astronaut.findByIdAndUpdate(_id, input, { new:true });
         },
+
         addRocketToAstronaut: async (root, {_id,_idRocket }) => {
             var rocket = await Rocket.findById(_idRocket);
             var astronaut = await Astronaut.findByIdAndUpdate(_id, {
