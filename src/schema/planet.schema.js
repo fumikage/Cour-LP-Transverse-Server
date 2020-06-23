@@ -8,12 +8,14 @@ type Planet {
     _id: ID!
     name: String
     costDestination: Int
+    imagePlanet: String
     resources: [Resource]
   }
   
   input PlanetInput{
     name: String
     costDestination: Int
+    
   }
 
   extend type Query {

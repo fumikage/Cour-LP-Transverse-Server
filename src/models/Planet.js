@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const planetSchema = new Schema({
     name: String,
     costDestination: Number,
+    imagePlanet: String,
     resources: { type: Schema.Types.ObjectId, ref: 'Resource' },
 }, {collection:'Planet'});
 

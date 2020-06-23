@@ -58,6 +58,7 @@ export const typeDef = `
     id: Int,
     name: String,
     costDestination: Int
+    imagePlanet: String
   }
 `
 
@@ -111,6 +112,7 @@ export const resolvers = {
                 }
                
             })   
+            console.log(planetSelect)
             return planetSelect       
         }
     },
@@ -118,14 +120,16 @@ export const resolvers = {
         changePlanet: async (root, {_id}, context, info) => {
             const mYastronaut = await Astronaut.findById(_id);
             const astronaut = await Astronaut.findByIdAndUpdate(_id, {currentPlanet: mYastronaut.currentPlanet + 1});
+            console.log(astronaut)
             const planets = planetData.planets
             let planetSelect;
             planets.forEach(function(planet){
-                if(planet.id === astronaut.currentPlanet){
+                if(planet.id === astronaut.currentPlanet + 1){
                    planetSelect = planet
                 }
                
-            })   
+            })
+             console.log(planetSelect)
             return planetSelect       
         },
         createAstronaut: async (parent, {name, surname, nationality, money, login, password, rocketName}, ctx, info) =>{
