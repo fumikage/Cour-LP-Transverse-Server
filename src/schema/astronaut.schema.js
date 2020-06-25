@@ -187,6 +187,7 @@ export const resolvers = {
                     expiresIn: '1h',
                 },
             )
+            console.log("test")
             return {
                 token, astronaut: Astronautfind
             }
